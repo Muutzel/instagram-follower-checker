@@ -40,7 +40,7 @@ else
 
 //gloabl variables for menu
 var lastResult = "";
-var end = false;
+var MenuLoopEnd = false;
 
 int Menu()
 {
@@ -82,7 +82,7 @@ int Menu()
                           "1 = search your instagram followers" + Environment.NewLine +
                           "2 = show all unfollowers" + Environment.NewLine +
                           "3 = open directory with logs" + Environment.NewLine +
-                          "8 = release notes" + Environment.NewLine +
+                          "8 = update notes" + Environment.NewLine +
                           "9 = exit" + Environment.NewLine);
     
         //Eingabe
@@ -137,7 +137,7 @@ do
             else
             {
                 Console.WriteLine(result);
-                end = true;
+                MenuLoopEnd = true;
             }
             break;
         }
@@ -169,8 +169,8 @@ do
         }
         case 8:
         {
-            var result =  Informations.GetLastReleaseNotes;
-            lastResult = "release notes:" + Environment.NewLine + "- " + String.Join(Environment.NewLine + "- ",result);
+            var result =  Informations.GetLastUpdateNotes;
+            lastResult = "update notes:" + Environment.NewLine + "- " + String.Join(Environment.NewLine + "- ",result);
             
             break;
         }
@@ -181,7 +181,7 @@ do
             return 0;
         }
     }
-} while (!end);
+} while (!MenuLoopEnd);
 
 
 
@@ -197,24 +197,24 @@ return 0;
 internal static class Informations
 {
     public static readonly string Version = "0.0.2";
-    public static List<string> GetLastReleaseNotes => ReleaseNotes.FirstOrDefault().Notes;
+    public static List<string> GetLastUpdateNotes => UpdateNotes.FirstOrDefault().Notes;
 
-    private static readonly List<ReleaseNotes> ReleaseNotes = new()
+    private static readonly List<UpdateNotes> UpdateNotes = new()
     {
-        new ReleaseNotes(
-            Version = "0.0.2", 
-            new List<string>()
+        new UpdateNotes(
+            version: "0.0.2", 
+            notes: new List<string>()
             {
                 "translation to english",
-                "added ReleaseNotes to Menu",
+                "added UpdateNotes to Menu",
                 "added summaries to functions",
                 "move String.IsEmpty to Helper.cs",
-                "ask for username if not in arguments at application start",
+                "ask for username if not in arguments at application start"
             }
         ),
-        new ReleaseNotes(
-            Version = "0.0.1", 
-            new List<string>()
+        new UpdateNotes(
+            version: "0.0.1", 
+            notes: new List<string>()
             {
                 "first release"
             }
@@ -225,9 +225,9 @@ internal static class Informations
 /// <summary>
 /// internal class for release notes entry
 /// </summary>
-internal class ReleaseNotes
+internal class UpdateNotes
 {
-    public ReleaseNotes(string version, List<string> notes)
+    public UpdateNotes(string version, List<string> notes)
     {
         Version = version;
         Notes = notes;
