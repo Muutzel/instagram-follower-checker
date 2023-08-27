@@ -7,7 +7,9 @@ It saves the list of your followers in a file. When you run the application agai
 ## Requirements
 - [.NET 7](https://dotnet.microsoft.com/download/dotnet/7.0)
 - OS x68 or x64
-- Nuget: Selenium.WebDriver 4.11.0
+
+## Nuget
+- Selenium.WebDriver 4.11.0
 
 ## Language
 - c# 11.0

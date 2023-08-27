@@ -3,12 +3,16 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
 
-namespace instagram_checker.Helpers;
+namespace instagram_follower_checker;
 
 public static class Selenium
 {
-    
-
+    /// <summary>
+    /// scroll in an element down
+    /// </summary>
+    /// <param name="driver">the selenium driver</param>
+    /// <param name="followerList">the reference of followers</param>
+    /// <returns>String "ok" or error message if error ocourred</returns>
     public static string ScrollDown(this ChromeDriver driver, ref List<string> followerList)
     {
         IWebElement lastElementInLastRound = null;
@@ -83,12 +87,12 @@ public static class Selenium
             var checkWaitFollowerList = getModal.FindElements(By.CssSelector("div[role='button']"));
             if (Equals(checkWaitFollowerList.LastOrDefault(), lastElementInLastRound))
             {
-                Thread.Sleep(500);
+                Thread.Sleep(1000);
                 //zur Sicherheit nochmal letztes ELement neu auslesen und prüfen ob es sich geändert hat
                 checkWaitFollowerList = getModal.FindElements(By.CssSelector("div[role='button']"));
                 if (Equals(checkWaitFollowerList.LastOrDefault(), lastElementInLastRound))
                 {
-                    Thread.Sleep(500);
+                    Thread.Sleep(1000);
                 }
             }
         } while (true);
@@ -96,6 +100,14 @@ public static class Selenium
         return "ok";
     }
 
+    
+    /// <summary>
+    /// Send text to an input
+    /// </summary>
+    /// <param name="driver">the selenium driver</param>
+    /// <param name="element">the <see cref="IWebElement"/> of the input</param>
+    /// <param name="text">the text to write in an input</param>
+    /// <returns>Returns whether the action was successful</returns>
     public static bool SendKeys(this ChromeDriver driver, IWebElement element, string text)
     {
         try
@@ -111,6 +123,15 @@ public static class Selenium
     }
 
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="driver">the selenium driver</param>
+    /// <param name="element">the HTML element to click at (a, button, ...)</param>
+    /// <param name="value">optional: the value of the element</param>
+    /// <param name="valueEndsWith">optional: the value of the elements endswith</param>
+    /// <param name="waitSeconds">optional: how long wait for the element to appear</param>
+    /// <returns>Returns whether the action was successful</returns>
     public static string ClickElement(this ChromeDriver driver, string element, string value = "",string valueEndsWith = "", int waitSeconds = 0)
     {
         if (!value.IsEmpty())
@@ -151,6 +172,15 @@ public static class Selenium
     }
 
 
+    /// <summary>
+    /// Find an element
+    /// </summary>
+    /// <param name="driver">the selenium driver</param>
+    /// <param name="element">the HTML element to click at (a, button, ...)</param>
+    /// <param name="value">optional: the value of the element</param>
+    /// <param name="valueEndsWith">optional: the value of the elements endswith</param>
+    /// <param name="waitSeconds">optional: how long wait for the element to appear</param>
+    /// <returns>returns a <see cref="IWebElement"/> otherwise null</returns>
     private static IWebElement? FindElement(this ChromeDriver driver, string element, string value = "",string valueEndsWith = "",
         int waitSeconds = 0)
     {
@@ -162,6 +192,16 @@ public static class Selenium
     }
 
 
+    /// <summary>
+    /// Find an elements
+    /// </summary>
+    /// <param name="driver">the selenium driver</param>
+    /// <param name="element">the HTML element to click at (a, button, ...)</param>
+    /// <param name="value">optional: the value of the element</param>
+    /// <param name="valueEndsWith">optional: the value of the elements endswith</param>
+    /// <param name="indexOfElement">optional: when you only want a specific index from found elements</param>
+    /// <param name="waitSeconds">optional: how long wait for the element to appear</param>
+    /// <returns>returns a <see cref="IWebElement"/> otherwise null</returns>
     private static List<IWebElement>? FindElements(this ChromeDriver driver, string element, string value = "", string valueEndsWith = "",
         int indexOfElement = -1, int waitSeconds = 0)
     {

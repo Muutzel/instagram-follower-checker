@@ -1,10 +1,18 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 
-namespace instagram_checker.Helpers;
+namespace instagram_follower_checker;
 
+/// <summary>
+/// Methods for the application
+/// </summary>
 public static class Functions
 {
+    /// <summary>
+    /// Main method to search follers
+    /// </summary>
+    /// <returns>A string with "ok" or a string with an error if occours</returns>
+    /// <exception cref="Exception">When there is a exception/error with selenium</exception>
     public static string GetFollowersFromInstagram()
     {
         try
@@ -24,14 +32,6 @@ public static class Functions
             {
                 return result;
             }
-
-
-            // //gehe auf Follower Seite
-            // Thread.Sleep(1000);
-            // result = driver.ClickElement("button", valueEndsWith:"Follower",waitSeconds:5);
-            // if (result != "ok")
-            //     throw new Exception(result);
-            // Console.WriteLine("Loginmaske erschienen");
     
     
             //einloggen
@@ -72,7 +72,7 @@ public static class Functions
     
     
             //Liste speichern
-            result = Functions.SaveFollowerNames(followerList);
+            result = Functions.SaveUnfollowerNames(followerList);
             if (result != "ok")
                 throw new Exception(result);
     
@@ -89,19 +89,47 @@ public static class Functions
             return "Es trat ein Fehler auf: " + e.Message;
         }
     }
-    public static bool IsEmpty(this string? s)
+    
+    
+    /// <summary>
+    /// Method to show the unfollowers 
+    /// </summary>
+    /// <returns>List of strings that contains username of unfollowers</returns>
+    public static List<string> ShowUnfollowersList()
     {
-        if (s == null)
-            return true;
+        var path = Environment.GetEnvironmentVariable("instagramFollowerCheckerPath");
+        var filename = Environment.GetEnvironmentVariable("instagramFollowerCheckerUnfollowerFilename");
+        var unfollowers = new List<string>();
 
-        if (s.Trim() == "")
-            return true;
-
-        return false;
+        if(File.Exists(path + "\\" + filename) == false)
+            return unfollowers;
+        
+        using var sr = new StreamReader(path + "\\" + filename);
+        var line = sr.ReadLine();
+        while (line != null)
+        {
+            if (
+                line != null &&
+                line != "" &&
+                !line.StartsWith("-----") &&
+                !line.StartsWith("Liste erstellt am")
+            )
+            {
+                unfollowers.Add(line);
+            }
+            line = sr.ReadLine();
+        }
+        
+        return unfollowers;
     }
 
-    
-    public static string AcceptCookies(this ChromeDriver driver)
+
+    /// <summary>
+    /// Accept Cookies on the website
+    /// </summary>
+    /// <param name="driver"></param>
+    /// <returns>String "ok" or an error message if errors ocourred</returns>
+    private static string AcceptCookies(this ChromeDriver driver)
     {
         //Seite fertig laden lassen
         
@@ -111,7 +139,12 @@ public static class Functions
     }
 
 
-    public static string LogIn(this ChromeDriver driver)
+    /// <summary>
+    /// Go to login page and log in
+    /// </summary>
+    /// <param name="driver"></param>
+    /// <returns>String "ok" or an error message if errors ocourred</returns>
+    private static string LogIn(this ChromeDriver driver)
     {
         var usernameInput = driver.FindElement(By.CssSelector("input[name='username']"));
         var passwordInput = driver.FindElement(By.CssSelector("input[name='password']"));
@@ -138,6 +171,10 @@ public static class Functions
         
         if (Environment.GetEnvironmentVariable("password").IsEmpty())
         {
+            var resultUsername = driver.SendKeys(usernameInput, Environment.GetEnvironmentVariable("instagramUsername"));
+            
+            //username not check because user has to login self
+            
             Console.WriteLine("Gib deine Logindaten ein und bestätige");
         }
         else
@@ -171,10 +208,14 @@ public static class Functions
     }
 
 
-    public static string CompareTwoLogs()
+    /// <summary>
+    /// compare two logs and save the unfollowers
+    /// </summary>
+    /// <returns></returns>
+    private static string CompareTwoLogs()
     {
-        var path = Environment.GetEnvironmentVariable("instagramCheckerPath");
-        var filename = Environment.GetEnvironmentVariable("instagramCheckerEntfolgtFilename");
+        var path = Environment.GetEnvironmentVariable("instagramFollowerCheckerPath");
+        var filename = Environment.GetEnvironmentVariable("instagramFollowerCheckerUnfollowerFilename");
         
         if (!Directory.Exists(path))
         {
@@ -221,7 +262,7 @@ public static class Functions
         }
         
         //vergleichen
-        Console.WriteLine(Environment.NewLine + "Folgende Follower sind entfolgt");
+        Console.WriteLine(Environment.NewLine + "new unfollower");
         var jumpedOffFollowers = new List<string>();
         if (followerList[0].Count > 0 && followerList[1].Count > 0)
         {
@@ -256,7 +297,7 @@ public static class Functions
             
             //speichern
             using var sw = new StreamWriter(path + "\\" + filename);
-            sw.WriteLine($"Liste erstellt am {DateTime.Now.ToString("G")} ({jumpedOffFollowers.Count} Unfollower)");
+            sw.WriteLine($"Liste erstellt am {DateTime.Now.ToString("G")} ({jumpedOffFollowers.Count} unfollowers)");
             foreach (var jumpedOffFollower in jumpedOffFollowers)
             {
                 sw.WriteLine(jumpedOffFollower);
@@ -281,37 +322,13 @@ public static class Functions
         return "ok" + ";" + lastResult;
     }
 
-
-    public static List<string> ShowUnfollowersList()
-    {
-        var path = Environment.GetEnvironmentVariable("instagramCheckerPath");
-        var filename = Environment.GetEnvironmentVariable("instagramCheckerEntfolgtFilename");
-        var unfollowers = new List<string>();
-
-        if(File.Exists(path + "\\" + filename) == false)
-            return unfollowers;
-        
-        using var sr = new StreamReader(path + "\\" + filename);
-        var line = sr.ReadLine();
-        while (line != null)
-        {
-            if (
-                line != null &&
-                line != "" &&
-                !line.StartsWith("-----") &&
-                !line.StartsWith("Liste erstellt am")
-            )
-            {
-                unfollowers.Add(line);
-            }
-            line = sr.ReadLine();
-        }
-        
-        return unfollowers;
-    }
-
-
-    public static string SaveFollowerNames(List<string> followerList)
+    
+    /// <summary>
+    /// save the unfollower names in a txt file
+    /// </summary>
+    /// <param name="followerList">List with unfollowers. give ordered list back</param>
+    /// <returns>String "ok" or an error message if errors ocourred</returns>
+    private static string SaveUnfollowerNames(List<string> followerList)
     {
         //liste sortieren
         followerList = followerList.OrderBy(x => x).ToList();
@@ -319,7 +336,7 @@ public static class Functions
         //speichern
         try
         {
-            var path = Environment.GetEnvironmentVariable("instagramCheckerPath");
+            var path = Environment.GetEnvironmentVariable("instagramFollowerCheckerPath");
             var name = DateTime.Now.ToLocalTime().ToString("yy-MM-dd_hh-mm-ss");
             
             //prüfen ob Ordner existiert

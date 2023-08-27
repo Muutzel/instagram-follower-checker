@@ -1,14 +1,15 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System.Diagnostics;
-using instagram_checker.Helpers;
+using instagram_follower_checker;
 
+//global variables for application
 var startArgs = Environment.GetCommandLineArgs().ToList();
-Environment.SetEnvironmentVariable("instagramCheckerPath",Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile) + "\\instagram-follower-checker");
-Environment.SetEnvironmentVariable("instagramCheckerEntfolgtFilename","entfolgt.txt");
+Environment.SetEnvironmentVariable("instagramFollowerCheckerPath",Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile) + "\\instagram-follower-checker");
+Environment.SetEnvironmentVariable("instagramFollowerCheckerUnfollowerFilename","unfollowers.txt");
 
 
-//prüfen ob Logindaten übergeben wurden
+//check arguments at start
 if (
     startArgs.Any(x => x.StartsWith("-u")) &&
     startArgs.Any(x => x.StartsWith("-p"))
@@ -16,28 +17,28 @@ if (
 {
     try
     {
-        //index der Logindaten holen
+        //get index of login data
         var u = startArgs.IndexOf("-u");
         var p = startArgs.IndexOf("-p");
     
         Environment.SetEnvironmentVariable("instagramUsername",startArgs[u+1]);
         Environment.SetEnvironmentVariable("password",startArgs[p+1]);
         
-        Console.WriteLine($"Logindaten wurden für {Environment.GetEnvironmentVariable("instagramUsername")} übergeben");
+        Console.WriteLine($"login for {Environment.GetEnvironmentVariable("instagramUsername")} was set");
         Thread.Sleep(3000);
     }
     catch (Exception e)
     {
-        Console.WriteLine("Es trat ein Fehler beim auslesen der Logindaten auf (wurde Username und Passwort angegeben?): " + e.Message);
-        Console.WriteLine("Mit Parameter aufrufen: \"-u username -p password\"");
+        Console.WriteLine("there was an error at checking the login credentials from the arguments: " + e.Message);
         return 1;
     }
 }
 else
 {
-    //username wird später abgefragt. Passwort wird selbst eingegeben
+    //username and password not set. ask for username later
 }
 
+//gloabl variables for menu
 var lastResult = "";
 var end = false;
 
@@ -49,15 +50,13 @@ int Menu()
     
     do
     {
-        var inputMin = 1;
-        var inputMax = 3;
         Console.Clear();
         Console.WriteLine("instagram-follower-checker");
-        Console.WriteLine("Version: " + Informations.Version);
+        Console.WriteLine("version: " + Informations.Version);
         if(!Environment.GetEnvironmentVariable("instagramUsername").IsEmpty())
-            Console.WriteLine("Hallo " + Environment.GetEnvironmentVariable("instagramUsername") + " :)");
+            Console.WriteLine("hi " + Environment.GetEnvironmentVariable("instagramUsername") + " :)");
         else
-            Console.WriteLine("Hallo :)");
+            Console.WriteLine("hi :)");
     
         //Ausgaben
         if (error != "")
@@ -80,10 +79,11 @@ int Menu()
         }
         
         Console.WriteLine(Environment.NewLine + "" +
-                          "1 = Alle Follower von instagram auslesen" + Environment.NewLine +
-                          "2 = bisherige entfollower anzeigen" + Environment.NewLine +
-                          "3 = Ordner mit gesammelten Daten öffnen" + Environment.NewLine +
-                          "9 = beenden" + Environment.NewLine);
+                          "1 = search your instagram followers" + Environment.NewLine +
+                          "2 = show all unfollowers" + Environment.NewLine +
+                          "3 = open directory with logs" + Environment.NewLine +
+                          "8 = release notes" + Environment.NewLine +
+                          "9 = exit" + Environment.NewLine);
     
         //Eingabe
         Console.WriteLine();
@@ -93,19 +93,20 @@ int Menu()
             error = $"'{read}' war keine Zahl";
         }
 
-        if (entry > inputMin-1 && entry < inputMax + 1)
-        {
-            inputWasGood = true;
-            input = entry;
-        }
-        else if(entry == 9)
+        if (
+            entry == 1 ||
+            entry == 2 ||
+            entry == 3 ||
+            entry == 8 ||
+            entry == 9
+            )
         {
             inputWasGood = true;
             input = entry;
         }
         else
         {
-            error = $"'{read}' war keine Zahl zwischen {inputMin} und {inputMax}";
+            error = $"'{read}' was not a valid entry";
         }
     } while(inputWasGood == false);
 
@@ -119,10 +120,17 @@ do
     {
         case 1:
         {
+            if (Environment.GetEnvironmentVariable("instagramUsername").IsEmpty())
+            {
+                Console.WriteLine("Gib deinen Benutzernamen für Instagram ein:");
+                var username = Console.ReadLine();
+                Environment.SetEnvironmentVariable("instagramUsername",username);
+            }
+            
             var result = Functions.GetFollowersFromInstagram();
             if (result.StartsWith("ok;"))
             {
-                result = "Folgende Follower sind entfolgt" + Environment.NewLine + result.Substring(3);
+                result = "new unfollowers:" + Environment.NewLine + result.Substring(3);
                 result = result.Replace(";", Environment.NewLine);
                 lastResult = result;
             }
@@ -137,10 +145,10 @@ do
         {
             var result = Functions.ShowUnfollowersList();
             if (result.Count == 0)
-                lastResult = "keine entfollower :D";
+                lastResult = "no unfollowers :D";
             else
             {
-                lastResult = "Folgende Follower sind bisher entfolgt";
+                lastResult = "all unfollowers";
                 foreach (var item in result)
                 {
                     lastResult += Environment.NewLine + item;
@@ -159,10 +167,17 @@ do
             
             break;
         }
+        case 8:
+        {
+            var result =  Informations.GetLastReleaseNotes;
+            lastResult = "release notes:" + Environment.NewLine + String.Join(Environment.NewLine + "- ",result);
+            
+            break;
+        }
         case 9:
         {
-            Console.WriteLine("Tschüüüüü");
-            Thread.Sleep(3000);
+            Console.WriteLine("bye :)");
+            Thread.Sleep(2000);
             return 0;
         }
     }
@@ -170,13 +185,57 @@ do
 
 
 
-//Durch Exception kommt man hier hin
-Console.WriteLine("Enter drücken zum beenden");
+//end of program, when exception is thrown
+Console.WriteLine("press Enter to exit");
 Console.ReadLine();
 return 0;
 
 
+/// <summary>
+/// internal class with all release notes
+/// </summary>
 internal static class Informations
 {
-    public static readonly string Version = "0.0.1";
+    public static readonly string Version = "0.0.2";
+    public static List<string> GetLastReleaseNotes => ReleaseNotes.FirstOrDefault().Notes;
+
+    private static readonly List<ReleaseNotes> ReleaseNotes = new()
+    {
+        new()
+        {
+            Version = "0.0.2",
+            Notes = new List<string>()
+            {
+                "translation to english",
+                "added ReleaseNotes to Menu",
+                "added summaries to functions",
+                "move String.IsEmpty to Helper.cs",
+                "ask for username if not in arguments at application start",
+            }
+        },
+        new()
+        {
+            Version = "0.0.1",
+            Notes = new List<string>()
+            {
+                "first release"
+            }
+        }
+    };
+}
+
+/// <summary>
+/// internal class for release notes entry
+/// </summary>
+internal class ReleaseNotes
+{
+    /// <summary>
+    /// version of release
+    /// </summary>
+    public string Version { get; set; }
+    
+    /// <summary>
+    /// release notes
+    /// </summary>
+    public List<string> Notes { get; set; }
 }
