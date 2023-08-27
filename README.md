@@ -51,3 +51,9 @@ Muutzel @ github
 
 ## Updates
 ### 0.0.1 initial upload in german
+### 0.0.2 initial upload in german
+- translation to english
+- added ReleaseNotes to Menu
+- added summaries to functions
+- move String.IsEmpty to Helper.cs
+- ask for username if not in arguments at application start
