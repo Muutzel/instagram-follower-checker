@@ -26,7 +26,7 @@ public static class Selenium
             var getModal = driver.FindElements(By.CssSelector("div[role='dialog']")).LastOrDefault();
             
             if (getModal == null)
-                return $"Modal mit Followern konnte nicht (mehr) gefunden werden";
+                return $"modal not found (any more)";
 
             
             var getTempFollowerList = getModal.FindElements(By.CssSelector("div[role='button']"));
@@ -35,17 +35,17 @@ public static class Selenium
             {
                 try
                 {
-                    //Links der follower zur Liste hinzufügen
-                    Console.WriteLine("Follower Liste auslesen...");
-                    var readFolowerlist = getTempFollowerList.Where(x => x.Text.Contains("Entfernen")).ToList();
-                    Console.WriteLine("Follower Liste ausgelesen");
+                    //read link buttons from followers
+                    Console.WriteLine("read follower list...");
+                    var readFollowerslist = getTempFollowerList.Where(x => x.Text.Contains("Entfernen")).ToList();
+                    Console.WriteLine("follower list reading finished");
 
                     count = 0;
-                    foreach (var rfl in readFolowerlist)
+                    foreach (var rfl in readFollowerslist)
                     {
                         count++;
                         
-                        Console.Write($"lese Follower {count} aus: ");
+                        Console.Write($"read name of follower {count}: ");
                         var instaName =rfl 
                             .FindElement(By.XPath("parent::*"))
                             .FindElement(By.XPath("parent::*"))
@@ -66,35 +66,39 @@ public static class Selenium
                 break;
             }
             
-            Console.WriteLine($"mehr follower laden ({count})");
+            Console.WriteLine($"load more follower (pass {count})");
             
-            //letzten Eintrag für nächste Runde merken
+            //copy last entry
             lastElementInLastRound = getTempFollowerList.LastOrDefault();
             
             if (count % 100 == 0)
             {
-                Console.WriteLine("Follower geladen: " + getTempFollowerList.Where(x => x.Text.Contains("Entfernen")).Count());
+                Console.WriteLine(getTempFollowerList.Where(x => x.Text.Contains("Entfernen")).Count() + " followers loaded so far");
             }
             
-            //zum letzten scrollen
+            //scoll to last element
             Actions actions = new Actions(driver);
             actions.MoveToElement(lastElementInLastRound);
             actions.Perform();
             
-            //warten wegen Animation
+            //wait because html animations
             Thread.Sleep(500);
-            //letztes ELement neu auslesen und prüfen ob es sich geändert hat
+            //read last element again and compare it
             var checkWaitFollowerList = getModal.FindElements(By.CssSelector("div[role='button']"));
             if (Equals(checkWaitFollowerList.LastOrDefault(), lastElementInLastRound))
             {
+                //wait because maybe html animations
                 Thread.Sleep(1000);
-                //zur Sicherheit nochmal letztes ELement neu auslesen und prüfen ob es sich geändert hat
+                //for safety read last element again and compare it
                 checkWaitFollowerList = getModal.FindElements(By.CssSelector("div[role='button']"));
                 if (Equals(checkWaitFollowerList.LastOrDefault(), lastElementInLastRound))
                 {
+                    //wait because maybe html animations. sometimes animations are slow...
                     Thread.Sleep(1000);
                 }
             }
+            
+            //after this wating, loop again
         } while (true);
         
         return "ok";
@@ -134,12 +138,13 @@ public static class Selenium
     /// <returns>Returns whether the action was successful</returns>
     public static string ClickElement(this ChromeDriver driver, string element, string value = "",string valueEndsWith = "", int waitSeconds = 0)
     {
+        //if you want to click an element with a specific value
         if (!value.IsEmpty())
         {
             var getElement = driver.FindElement(element, value: value, waitSeconds: waitSeconds);
 
-            if (getElement == null)
-                return $"Es wurde kein Elemente ({element}) mit dem Wert '{value}' gefunden.";
+            if (getElement == null) 
+                return $"there was no element '{element}' with the value '{value}' found.";
 
             try
             {
@@ -147,16 +152,17 @@ public static class Selenium
             }
             catch (Exception e)
             {
-                return $"Es konnte nicht auf das Element '{element}' mit dem value '{value}' geklickt werden: " + e.Message;
+                return $"there was an error at clicking the element '{element}' with the value '{value}': " + e.Message;
             }
         }
         
+        //if you want to click an element with a specific value ends with
         if (!valueEndsWith.IsEmpty())
         {
             var getElement = driver.FindElement(element, valueEndsWith: valueEndsWith, waitSeconds: waitSeconds);
 
             if (getElement == null)
-                return $"Es wurde kein Elemente ({element}) mit dem Wert '{valueEndsWith}' gefunden.";
+                return $"there was no element '{element}' ends with the value '{valueEndsWith}' found.";
 
             try
             {
@@ -164,7 +170,7 @@ public static class Selenium
             }
             catch (Exception e)
             {
-                return $"Es konnte nicht auf das Element '{element}' mit dem value '{valueEndsWith}' geklickt werden: " + e.Message;
+                return $"there was an error at clicking the element '{element}' with ends with the value '{value}': " + e.Message;
             }
         }
 
@@ -231,7 +237,7 @@ public static class Selenium
                 break;
             }
 
-            //warte kurz
+            //wait because animations
             Thread.Sleep(500);
         } while (timer.Elapsed.Seconds < waitSeconds);
 
