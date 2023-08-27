@@ -1,4 +1,4 @@
-﻿namespace instagram_follower_checker;
+﻿namespace instagram_follower_checker.helpers;
 
 public static class Helper
 {
@@ -6,7 +6,7 @@ public static class Helper
     /// checks if a string is empty (null or "")
     /// </summary>
     /// <param name="s">the string to check</param>
-    /// <returns>true, when string is empty. otherwise false</returns>
+    /// <returns>true, when string is empty otherwise false</returns>
     public static bool IsEmpty(this string? s)
     {
         if (s == null)

@@ -1,7 +1,7 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 
-namespace instagram_follower_checker;
+namespace instagram_follower_checker.helpers;
 
 /// <summary>
 /// Methods for the application
@@ -9,57 +9,56 @@ namespace instagram_follower_checker;
 public static class Functions
 {
     /// <summary>
-    /// Main method to search follers
+    /// Main method to search followers
     /// </summary>
-    /// <returns>A string with "ok" or a string with an error if occours</returns>
+    /// <returns>A string with "ok" or a string with an error if occoured</returns>
     /// <exception cref="Exception">When there is a exception/error with selenium</exception>
     public static string GetFollowersFromInstagram()
     {
         try
         {
-            //ChromeDriver erstellen
+            //create chromedriver
             using var driver = new ChromeDriver();
             
-            //driver erstellen und auf Profil gehen
+            //go to instagram
             driver.Navigate().GoToUrl("https://www.instagram.com/");
 
 
-            //Cookies akzeptieren, wenn sie auftauchen
+            //accept cookies
             var result = driver.AcceptCookies();
             if (result == "ok")
-                Console.WriteLine("Cookies wurden akzeptiert");
+                Console.WriteLine("cookies accepted");
             else
             {
                 return result;
             }
     
     
-            //einloggen
+            //login
             Thread.Sleep(500);
             result = driver.LogIn();
             if (result != "ok")
                 throw new Exception(result);
-            Console.WriteLine("Erledige 2FA");
 
 
-            //Enter drücken, wenn man fertig ist
-            Console.Write("Drücke Enter, wenn du auf der Startseite bist");
+            //press enter when on startpage
+            Console.Write("press Enter to continue when you are on the startpage");
             Console.ReadKey();
             
             
-            //gehe auf Profil
+            //go to profile
             driver.Navigate().GoToUrl("https://www.instagram.com/" + Environment.GetEnvironmentVariable("instagramUsername"));
     
     
-            //gehe auf Follower Seite
+            //open follower modal
             Thread.Sleep(1000);
             result = driver.ClickElement("a", valueEndsWith:"Follower",waitSeconds:5);
             if (result != "ok")
                 throw new Exception(result);
-            Console.WriteLine("Follower als Modal erschienen");
+            Console.WriteLine("follower modal opened");
     
     
-            //scrolle runter bis nichts mehr geladen wird
+            //scroll down to load all followers
             var followerList = new List<string>();
             Thread.Sleep(1000);
             result = driver.ScrollDown(ref followerList);
@@ -67,17 +66,17 @@ public static class Functions
                 throw new Exception(result);
     
     
-            //Browser wird nicht mehr gebraucht
+            //chromedriver will no longer be needed
             driver.Quit();
     
     
-            //Liste speichern
-            result = Functions.SaveUnfollowerNames(followerList);
+            //save follower list as txt file
+            result = Functions.SaveFollowerNames(followerList);
             if (result != "ok")
                 throw new Exception(result);
     
             
-            //gespeicherte Listen vergleichen
+            //compare two saved lists and save unfollowers in a txt file
             result = Functions.CompareTwoLogs();
             if (!result.StartsWith("ok"))
                 throw new Exception(result);
@@ -86,7 +85,7 @@ public static class Functions
         }
         catch (Exception e)
         {
-            return "Es trat ein Fehler auf: " + e.Message;
+            return "there was an unhandled error :/ " + Environment.NewLine + e.Message;
         }
     }
     
@@ -109,10 +108,9 @@ public static class Functions
         while (line != null)
         {
             if (
-                line != null &&
                 line != "" &&
                 !line.StartsWith("-----") &&
-                !line.StartsWith("Liste erstellt am")
+                !line.StartsWith("list created on")
             )
             {
                 unfollowers.Add(line);
@@ -127,12 +125,11 @@ public static class Functions
     /// <summary>
     /// Accept Cookies on the website
     /// </summary>
-    /// <param name="driver"></param>
+    /// <param name="driver">the selenium driver</param>
     /// <returns>String "ok" or an error message if errors ocourred</returns>
     private static string AcceptCookies(this ChromeDriver driver)
     {
-        //Seite fertig laden lassen
-        
+        //click on button to accept cookies
         var result = driver.ClickElement("button", value:"Alle Cookies erlauben",waitSeconds:5);
 
         return result;
@@ -142,7 +139,7 @@ public static class Functions
     /// <summary>
     /// Go to login page and log in
     /// </summary>
-    /// <param name="driver"></param>
+    /// <param name="driver">the selenium driver</param>
     /// <returns>String "ok" or an error message if errors ocourred</returns>
     private static string LogIn(this ChromeDriver driver)
     {
@@ -153,17 +150,17 @@ public static class Functions
 
         if (usernameInput == null && passwordInput == null)
         {
-            return "Username- und Passworteingabefeld wurden nicht gefunden";
+            return "Username- und Password input field was not found";
         }
 
         if (usernameInput == null)
         {
-            return "Usernameeingabefeld wurde nicht gefunden";
+            return "Username input field was not found";
         }
 
         if (passwordInput == null)
         {
-            return "Passworteingabefeld wurde nicht gefunden";
+            return "Password input field was not found";
         }
 
         #endregion
@@ -175,7 +172,7 @@ public static class Functions
             
             //username not check because user has to login self
             
-            Console.WriteLine("Gib deine Logindaten ein und bestätige");
+            Console.WriteLine("enter your password");
         }
         else
         {
@@ -186,17 +183,17 @@ public static class Functions
             
             if (!resultUsername && !resultPassword)
             {
-                return "Username- und Passworteingabefeld konnten nicht eingetragen werden";
+                return "Username and password input field could not be entered";
             }
 
             if (!resultUsername)
             {
-                return "Usernameeingabefeld konnte nicht eingetragen werden";
+                return "Username input field could not be entered";
             }
 
             if (!resultPassword)
             {
-                return "Passworteingabefeld konnte nicht eingetragen werden";
+                return "Password input field could not be entered";
             }
             
             if (result != "ok")
@@ -209,7 +206,7 @@ public static class Functions
 
 
     /// <summary>
-    /// compare two logs and save the unfollowers
+    /// compare two logs and save the unfollowers in a txt file
     /// </summary>
     /// <returns></returns>
     private static string CompareTwoLogs()
@@ -219,16 +216,13 @@ public static class Functions
         
         if (!Directory.Exists(path))
         {
-            return $"Der Pfad '{path}' zu den Follower-Listen existiert nicht";
+            return $"There are no saved follower lists to compare in '{path}'";
         }
 
-        var files = Directory.GetFiles(path).Where(x => !x.EndsWith(filename)).ToList();
-
-        if (files.Count > 2)
-            return $"Es wurden {files.Count} Dateien im Ordner '{path}' gefunden";
+        var files = Directory.GetFiles(path).Where(x => x.StartsWith("followers from ")).ToList();
         
         
-        //Daten auslesen
+        //read files
         var followerList = new List<List<string>>()
         {
             new List<string>(),
@@ -241,19 +235,19 @@ public static class Functions
             
             using var sr = new StreamReader(file);
             
-            //erste Zeile einlesen. Die enthält Informationen wie viele Follower in der Liste sind
+            //read first line. It contains information how many followers are in the list. skip this line
             var line = sr.ReadLine();
             
             var counterLine = 0;
             while (line != null)
             {
                 counterLine++;
-                //Zeile auslesen
+                //read next line
                 line = sr.ReadLine();
                 if (line != null)
                 {
                     followerList[counterList].Add(line);
-                    Console.WriteLine($"Follower {counterLine} auslesen: '{line}'");
+                    Console.WriteLine($"read follower ({counterLine}): '{line}'");
                         
                 }
             }
@@ -261,14 +255,14 @@ public static class Functions
             counterList++;
         }
         
-        //vergleichen
-        Console.WriteLine(Environment.NewLine + "new unfollower");
+        //compare lists
+        Console.WriteLine(Environment.NewLine + "new unfollowers:");
         var jumpedOffFollowers = new List<string>();
-        if (followerList[0].Count > 0 && followerList[1].Count > 0)
+        if (followerList.First().Count > 0 && followerList.Last().Count > 0)
         {
-            foreach (var oldListFollower in followerList[0])
+            foreach (var oldListFollower in followerList.First())
             {
-                if (followerList[1].All(x => x != oldListFollower))
+                if (followerList.Last().All(x => x != oldListFollower))
                 {
                     jumpedOffFollowers.Add(oldListFollower);
                     Console.WriteLine(oldListFollower);
@@ -276,11 +270,11 @@ public static class Functions
             }
         }
         
-        //aktualisiere txt mit entfollowern
+        //update txt with unfollow
         var lastResult = "";
         if (jumpedOffFollowers.Count > 0)
         {
-            //alte Zeilen einlesen
+            //read lines from unfollwers list
             var oldLines = new List<string>();
         
             if(File.Exists(path + "\\" + filename))
@@ -295,19 +289,19 @@ public static class Functions
             }
             
             
-            //speichern
+            //add new unfollowers to list in txt file
             using var sw = new StreamWriter(path + "\\" + filename);
-            sw.WriteLine($"Liste erstellt am {DateTime.Now.ToString("G")} ({jumpedOffFollowers.Count} unfollowers)");
+            sw.WriteLine($"list created on {DateTime.Now.ToString("G")} - {jumpedOffFollowers.Count} unfollowers");
             foreach (var jumpedOffFollower in jumpedOffFollowers)
             {
                 sw.WriteLine(jumpedOffFollower);
                 lastResult += ";" + jumpedOffFollower;
             }
             
+            //end of new added list
             sw.WriteLine("-------------------------------");
-            sw.WriteLine();
             
-            //alte Zeilen hinten anfügen
+            //adding old list after new list
             foreach (var oldLine in oldLines)
             {
                 sw.WriteLine(oldLine);
@@ -315,8 +309,8 @@ public static class Functions
         }
         else
         {
-            Console.WriteLine("keine entfollower :D");
-            lastResult = "keine entfollower :D";
+            Console.WriteLine("no new unfollows :D");
+            lastResult = "no new unfollows :D";
         }
 
         return "ok" + ";" + lastResult;
@@ -324,45 +318,57 @@ public static class Functions
 
     
     /// <summary>
-    /// save the unfollower names in a txt file
+    /// save the follower names in a txt file
     /// </summary>
     /// <param name="followerList">List with unfollowers. give ordered list back</param>
     /// <returns>String "ok" or an error message if errors ocourred</returns>
-    private static string SaveUnfollowerNames(List<string> followerList)
+    private static string SaveFollowerNames(List<string> followerList)
     {
-        //liste sortieren
+        //sort list
         followerList = followerList.OrderBy(x => x).ToList();
         
-        //speichern
+        //save
         try
         {
             var path = Environment.GetEnvironmentVariable("instagramFollowerCheckerPath");
             var name = DateTime.Now.ToLocalTime().ToString("yy-MM-dd_hh-mm-ss");
             
-            //prüfen ob Ordner existiert
+            //check directory
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
             }
             
-            //wenn schon 3 Dateien vorhanden sind
+            //safe a little bit of space
             var files = Directory.GetFiles(path);
-            if (files.Count() == 3)
-                File.Delete(files.First());
+            var maxFiles = 25;
+            if (files.Count() == maxFiles)
+            {
+                //delete first x files
+                for (int i = 0; i < maxFiles - 5; i++)
+                {
+                    var firstFile = Directory.GetFiles(path).First();
+                    File.Delete(firstFile);
+
+                }
+                
+                //update files list
+                files = Directory.GetFiles(path);
+            }
 
             using var sw = new StreamWriter($"{path}\\{name}.txt");
-            sw.WriteLine($"Anzahl: " + followerList.Count);
+            sw.WriteLine($"followers: " + followerList.Count);
             foreach (var username in followerList)
             {
                 sw.WriteLine(username);
             }
             sw.Close();
             
-            Console.WriteLine($"Die Follower wurde unter '{path}\\{name}' gespeichert");
+            Console.WriteLine($"Follower was saved at '{path}\\{name}'");
         }
         catch (Exception e)
         {
-            return "Es gab einen Fehler beim speichern der Usernamen: " + e.Message;
+            return "There was an error at saving the follower list: " + e.Message;
         }
         
         return "ok";

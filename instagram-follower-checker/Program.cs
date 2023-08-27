@@ -1,7 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System.Diagnostics;
-using instagram_follower_checker;
+using instagram_follower_checker.helpers;
 
 //global variables for application
 var startArgs = Environment.GetCommandLineArgs().ToList();
@@ -170,7 +170,7 @@ do
         case 8:
         {
             var result =  Informations.GetLastReleaseNotes;
-            lastResult = "release notes:" + Environment.NewLine + String.Join(Environment.NewLine + "- ",result);
+            lastResult = "release notes:" + Environment.NewLine + "- " + String.Join(Environment.NewLine + "- ",result);
             
             break;
         }
@@ -201,10 +201,9 @@ internal static class Informations
 
     private static readonly List<ReleaseNotes> ReleaseNotes = new()
     {
-        new()
-        {
-            Version = "0.0.2",
-            Notes = new List<string>()
+        new ReleaseNotes(
+            Version = "0.0.2", 
+            new List<string>()
             {
                 "translation to english",
                 "added ReleaseNotes to Menu",
@@ -212,15 +211,14 @@ internal static class Informations
                 "move String.IsEmpty to Helper.cs",
                 "ask for username if not in arguments at application start",
             }
-        },
-        new()
-        {
-            Version = "0.0.1",
-            Notes = new List<string>()
+        ),
+        new ReleaseNotes(
+            Version = "0.0.1", 
+            new List<string>()
             {
                 "first release"
             }
-        }
+        )
     };
 }
 
@@ -229,6 +227,12 @@ internal static class Informations
 /// </summary>
 internal class ReleaseNotes
 {
+    public ReleaseNotes(string version, List<string> notes)
+    {
+        Version = version;
+        Notes = notes;
+    }
+
     /// <summary>
     /// version of release
     /// </summary>
@@ -237,5 +241,5 @@ internal class ReleaseNotes
     /// <summary>
     /// release notes
     /// </summary>
-    public List<string> Notes { get; set; }
+    public List<string> Notes { get;  }
 }

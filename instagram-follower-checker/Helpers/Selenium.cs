@@ -3,7 +3,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
 
-namespace instagram_follower_checker;
+namespace instagram_follower_checker.helpers;
 
 public static class Selenium
 {
